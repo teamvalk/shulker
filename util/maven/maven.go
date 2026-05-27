@@ -2,6 +2,7 @@ package maven
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -57,36 +58,45 @@ func (w Which) Fetch() (*MavenMetadata, error) {
 	return &meta, nil
 }
 
-/**
-func (w Which) GroupID() string {
-	if w == Neoforge {
-		return "net.neoforged"
-	}
-	return "net.minecraftforge"
-}
-
-// ArtifactID returns the Maven artifact name for the given platform.
-// Keeping this on Which means ResolveMavenURL callers don't have to
-// remember which string belongs to which platform.
-func (w Which) ArtifactID() string {
-	if w == Neoforge {
-		return "neoforge"
-	}
-	return "forge"
-}
-*/
-
-func (s Server) ResolveMavenURL() string {
+func (s Server) ResolveMavenURL() (string, error) {
 	// Convert "net.neoforged" -> "net/neoforged" to match Maven's folder structure
 	var url string
-	if s.Platform == Neoforge {
-		url = fmt.Sprintf("https://maven.neoforged.net/releases/net/neoforged/neoforge/%s/neoforge-%s-installer.jar", s.Version, s.Version)
-	} else {
-		url = fmt.Sprintf("https://maven.minecraftforge.net/net/minecraftforge/forge/%s/forge-%s-installer.jar", s.Version, s.Version)
+	var metadata, err = s.Platform.Fetch()
+	var selectedVersion string
+	if err != nil {
+		return "", err
 	}
-	return url
+	// if we for SURE know that this is
+	var knownInArray bool
+
+	switch s.Version {
+	case "release":
+		selectedVersion = metadata.Versioning.Release
+		knownInArray = true
+	case "latest":
+		selectedVersion = metadata.Versioning.Latest
+		knownInArray = true
+	default:
+		selectedVersion = s.Version
+		knownInArray = false
+	}
+	if !knownInArray {
+		for _, ver := range metadata.Versioning.Versions {
+			if selectedVersion == ver {
+				knownInArray = true
+				break
+			}
+		}
+		if !knownInArray {
+			return "", errors.New("selected version unfound in repositories")
+		}
+	}
+
+	if s.Platform == Neoforge {
+		url = fmt.Sprintf("https://maven.neoforged.net/releases/net/neoforged/neoforge/%s/neoforge-%s-installer.jar", selectedVersion, selectedVersion)
+	} else {
+		url = fmt.Sprintf("https://maven.minecraftforge.net/net/minecraftforge/forge/%s/forge-%s-installer.jar", selectedVersion, selectedVersion)
+	}
+	return url, nil
 }
 
-func (s Server) Save() {
-
-}

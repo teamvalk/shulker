@@ -7,10 +7,10 @@ import (
 
 func main() {
 	var server = maven.Server{
-		Platform: maven.Forge,
-		Version:  "26.1.2-64.0.8",
+		Platform: maven.Neoforge,
+		Version:  "latest",
 	}
-	x := server.ResolveMavenURL()
-	fmt.Println(server.Platform.Fetch())
-	fmt.Println(x)
+	x, err := server.ResolveMavenURL()
+
+	fmt.Println(x, err)
 }
