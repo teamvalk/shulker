@@ -1,1 +1,1 @@
-package forge
+package neoforge
