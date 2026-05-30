@@ -214,7 +214,7 @@ func (s Server) ResolveMavenURL() (string, error) {
 			if err != nil {
 				return "", fmt.Errorf("invalid neoforge loader %q: %w", s.Loader, err)
 			}
-			if parsed.Minecraft != s.Minecraft {
+			if s.Minecraft != "" && parsed.Minecraft != s.Minecraft {
 				return "", fmt.Errorf(
 					"loader %q targets Minecraft %s, not %s",
 					s.Loader, parsed.Minecraft, s.Minecraft,
