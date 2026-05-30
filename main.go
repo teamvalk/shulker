@@ -1,18 +1,17 @@
 package main
 
 import (
-	"fmt"
-	"shulker/util/maven"
+	"github.com/gin-gonic/gin"
+	"shulker/api/forge"
+	"shulker/api/neoforge"
 )
 
 func main() {
-	var server = maven.Server{
-		Platform: maven.Neoforge,
-		Version:  "1.12",
+	router := gin.Default()
+	forge.RegisterRoutes(router)
+	neoforge.RegisterRoutes(router)
+	err := router.Run()
+	if err != nil {
+		return
 	}
-	x, err := server.ResolveMavenURL()
-	y := maven.Which(0)
-	y.Fetch()
-	fmt.Println(y.Fetch())
-	fmt.Println(x, err)
 }
